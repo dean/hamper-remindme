@@ -47,7 +47,7 @@ class Reminder(ChatCommandPlugin):
 
     class RemindMe(Command):
         name = 'remindme'
-        regex = r'^remindme (\d+) (.+)'
+        regex = r'^remindme (?:(\d+ \w)|(\d+)) (.+)'
 
         short_desc = ('!remindme <minutes> <message>')
 
@@ -55,12 +55,14 @@ class Reminder(ChatCommandPlugin):
             print "intercepted remindme command"
 
             # reactor.callLater takes it's arguments as floats.
-            duration = float(groups[0])
+            duration = parse_time(groups[0])
+            if duration == None:
+                return
             message = groups[1]
 
             db = self.plugin.db
             args = (bot, comm['user'], message)
-            reactor.callLater(duration * 60, self.plugin.remind, *args)
+            reactor.callLater(duration, self.plugin.remind, *args)
 
             reminder = ReminderTable(user=comm['user'],
                                      message=message)
@@ -70,6 +72,28 @@ class Reminder(ChatCommandPlugin):
             bot.reply(comm, "{0} has set a reminder to {1} in {2} minutes."
                                 .format(comm['user'], message, str(duration)))
 
+        def parse_time(timestring):
+            try:
+                duration = float(timestring) * 60
+                return duration
+            except ValueError:
+                # Correct for any plurals
+                timestring = timestring.rstrip('s')
+                validtimes = {
+                    "second": 1,
+                    "minute": 60,
+                    "hour": 60 * 60,
+                    "day": 60 * 60 * 24,
+                    "week": 60 * 60 * 24 * 7,
+                    "month": 60 * 60 * 24 * 7 * 4
+                }
+                time = timestring.split()
+                if validtimes.get(time[1]):
+                    return float(time[0]) * validtimes.get(time[1])
+                else:
+                    bot.reply(comm, "Sorry, I didn't recognize that. "
+                              + short_desc)
+                    return None
 
     class Cancel(Command):
         name = 'cancel'
