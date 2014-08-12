@@ -47,7 +47,7 @@ class Reminder(ChatCommandPlugin):
 
     class RemindMe(Command):
         name = 'remindme'
-        regex = r'^remindme (?:(\d+ \w)|(\d+)) (.+)'
+        regex = r'^remindme (\d+) (.+)'
 
         short_desc = ('!remindme <minutes> <message>')
 
@@ -55,30 +55,29 @@ class Reminder(ChatCommandPlugin):
             print "intercepted remindme command"
 
             # reactor.callLater takes it's arguments as floats.
-            duration = parse_time(groups[0])
+            duration, msg = self.parse_time(groups[0], groups[1])
             if duration == None:
                 return
-            message = groups[1]
 
             db = self.plugin.db
-            args = (bot, comm['user'], message)
+            args = (bot, comm['user'], msg)
             reactor.callLater(duration, self.plugin.remind, *args)
 
             reminder = ReminderTable(user=comm['user'],
-                                     message=message)
+                                     message=msg)
             db.session.add(reminder)
             db.session.commit()
 
-            bot.reply(comm, "{0} has set a reminder to {1} in {2} minutes."
-                                .format(comm['user'], message, str(duration)))
+            # So we display in minutes.
+            duration /= 60
 
-        def parse_time(timestring):
-            try:
-                duration = float(timestring) * 60
-                return duration
-            except ValueError:
+            bot.reply(comm, "{0} has set a reminder to {1} in {2} minutes."
+                                .format(comm['user'], msg, str(duration)))
+
+        def parse_time(self, time, timestring):
+                time = float(time)
                 # Correct for any plurals
-                timestring = timestring.rstrip('s')
+                words = timestring.split()
                 validtimes = {
                     "second": 1,
                     "minute": 60,
@@ -87,13 +86,11 @@ class Reminder(ChatCommandPlugin):
                     "week": 60 * 60 * 24 * 7,
                     "month": 60 * 60 * 24 * 7 * 4
                 }
-                time = timestring.split()
-                if validtimes.get(time[1]):
-                    return float(time[0]) * validtimes.get(time[1])
+                mult = validtimes.get(words[0])
+                if mult:
+                    return (time * mult, ' '.join(words[1:]))
                 else:
-                    bot.reply(comm, "Sorry, I didn't recognize that. "
-                              + short_desc)
-                    return None
+                    return (time * 60, timestring)
 
     class Cancel(Command):
         name = 'cancel'
