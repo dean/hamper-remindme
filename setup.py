@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='hamper_remindme',
-    version='0.2',
+    version='0.3',
     packages=['hamper_remindme'],
     author='Dean Johnson',
     author_email='deanjohnson222@gmail.com',
