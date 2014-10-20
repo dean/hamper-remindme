@@ -1,9 +1,9 @@
 Reminder plugin for the IRC bot hamper.
 
-INSTALL
+Install
 =======
 
 ```shell
-pip install git+https://github.com/johnsdea/hamper-remindme.git
+pip install git+https://github.com/dean/hamper-remindme.git
 ```
 
