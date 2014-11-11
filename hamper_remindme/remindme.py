@@ -86,7 +86,8 @@ class Reminder(ChatCommandPlugin):
                     "week": 60 * 60 * 24 * 7,
                     "month": 60 * 60 * 24 * 7 * 4
                 }
-                mult = validtimes.get(words[0])
+                word = words[0][:-1] if words[0].endswith('s') else words[0]
+                mult = validtimes.get(word)
                 if mult:
                     return (time * mult, ' '.join(words[1:]))
                 else:
