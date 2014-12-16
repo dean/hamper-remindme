@@ -119,7 +119,7 @@ class Reminder(ChatCommandPlugin):
 
 class ReminderTable(SQLAlchemyBase):
     """
-    Stsrt a pizza poll for a certain duration.
+    Model representing a reminder.
     """
 
     __tablename__ = 'reminders'
